@@ -19,12 +19,11 @@ from django.core.management.utils import get_random_secret_key
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv("SECRET_KEY", get_random_secret_key())
-DEBUG = os.getenv("DEBUG", "1") == "1"
-
 
 # HOSTS & SECURITY ORIGINS
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+_hosts = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost")
+ALLOWED_HOSTS = [h.strip() for h in _hosts.split(",") if h.strip()]
+
 
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if origin]
 
@@ -33,12 +32,8 @@ CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv("DJANGO_CSRF_TRUS
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-0f+xr__b3o+6)3ftkno(s6+683fafaelph#^0^fj+an)-frl1!"
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+SECRET_KEY = os.getenv("SECRET_KEY", get_random_secret_key())
+DEBUG = os.getenv("DEBUG", "1") == "1"
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -77,6 +72,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "social_network.urls"
+WSGI_APPLICATION = "social_network.wsgi.application"
 
 TEMPLATES = [
     {
@@ -93,17 +89,16 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "social_network.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+    )
 }
 
 # DATABASES = {
