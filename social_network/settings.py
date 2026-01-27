@@ -9,23 +9,33 @@ https://docs.djangoproject.com/en/6.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
-
+import os
+from datetime import timedelta
 from pathlib import Path
+
+import dj_database_url
+from django.core.management.utils import get_random_secret_key
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+# HOSTS & SECURITY ORIGINS
+_hosts = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost")
+ALLOWED_HOSTS = [h.strip() for h in _hosts.split(",") if h.strip()]
+
+
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if origin]
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-0f+xr__b3o+6)3ftkno(s6+683fafaelph#^0^fj+an)-frl1!"
+SECRET_KEY = os.getenv("SECRET_KEY", get_random_secret_key())
+DEBUG = os.getenv("DEBUG", "1") == "1"
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+AUTH_USER_MODEL = 'users.User'
 
 
 # Application definition
@@ -37,6 +47,18 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
+    "django_extensions",
+    'drf_spectacular',
+
+    # Apps
+    "feed",
+    "follows",
+    "likes",
+    "notifications",
+    "posts",
+    "users",
+    "comments",
 ]
 
 MIDDLEWARE = [
@@ -50,6 +72,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "social_network.urls"
+WSGI_APPLICATION = "social_network.wsgi.application"
 
 TEMPLATES = [
     {
@@ -66,18 +89,24 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "social_network.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600,
+    )
 }
+
+# DATABASES = {
+#     "default": dj_database_url.config(
+#         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+#         conn_max_age=600,
+#     )
+# }
 
 
 # Password validation
@@ -115,3 +144,51 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# MEDIA FILES
+# MEDIA_URL = "/media/"
+# MEDIA_ROOT = BASE_DIR / "media"
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+}
+
+
+# SIMPLE JWT
+# SIMPLE_JWT = {
+#     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+#     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+#     "ROTATE_REFRESH_TOKENS": False,
+#     "BLACKLIST_AFTER_ROTATION": True,
+#     "AUTH_HEADER_TYPES": ("Bearer",),
+# }
+
+
+# SWAGGER / OPENAPI
+# SPECTACULAR_SETTINGS = {
+#     "TITLE": "SOCIAL_NETWORK API",
+#     "DESCRIPTION": "Documentação completa da API SOCIAL_NETWORK",
+#     "VERSION": "1.0.0",
+# }
+
+
+# DISABLE BROWSABLE API IN PROD
+# if not DEBUG:
+#     REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = [
+#         "rest_framework.renderers.JSONRenderer",
+#     ]
+
+
+# SECURITY (PRODUCTION SAFE)
+# SECURE_SSL_REDIRECT = not DEBUG
+# SESSION_COOKIE_SECURE = not DEBUG
+# CSRF_COOKIE_SECURE = not DEBUG
