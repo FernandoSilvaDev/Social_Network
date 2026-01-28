@@ -29,4 +29,5 @@ RUN poetry run python manage.py collectstatic --noinput
 
 EXPOSE 8000
 ENV PYTHONUNBUFFERED=1
-CMD ["gunicorn", "social_network.wsgi:application", "--bind", "0.0.0.0:8000"]
+# CMD ["gunicorn", "social_network.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["poetry", "run", "gunicorn", "social_network.wsgi:application", "--bind", "0.0.0.0:$PORT"]
