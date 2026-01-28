@@ -22,7 +22,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # HOSTS & SECURITY ORIGINS
 _hosts = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost")
-ALLOWED_HOSTS = [h.strip() for h in _hosts.split(",") if h.strip()]
+#ALLOWED_HOSTS = [h.strip() for h in _hosts.split(",") if h.strip()]
+ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "social-network-t56f.onrender.com",
+    "localhost",
+    "127.0.0.1"
+]
 
 
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if origin]
